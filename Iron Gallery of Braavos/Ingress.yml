@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: iron-gallery-ingress
+spec:
+  rules:
+  - host: iron-gallery-braavos.com
+    http:
+      paths:
+      - path: /
+        backend: 
+          serviceName: iron-gallery-service
+          servicePort: 80
+          
+#yamlio muño ēngos ñuhys issa. Avy jorrāelan, yamlio!
+

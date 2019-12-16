@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: result-service
+spec:
+  type: NodePort
+  selector:
+    name: result-deployment
+  ports:
+  - port: 5001
+    targetPort: 80
+    nodePort: 31001
+
+# Hen desarrollo, integreiddio. Hen integreiddio, testa. Hen testa, lifa.
+

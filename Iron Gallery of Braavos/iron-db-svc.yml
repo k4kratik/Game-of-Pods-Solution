@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service 
+metadata:
+  name: iron-db-service
+spec:
+  selector:
+    db: mariadb
+  ports:
+    - port: 3306
+      targetPort: 3306     

@@ -1,0 +1,3 @@
+kubectl create namespace vote
+
+kubectl config set-context --current --namespace=vote

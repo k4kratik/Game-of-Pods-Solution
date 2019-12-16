@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  type: ClusterIP
+  selector:
+    name: db-deployment
+  ports:
+  - port: 5432
+    targetPort: 5432

@@ -1,0 +1,146 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: drupal-mysql-pv
+spec:
+  storageClassName: manual
+  accessModes: 
+    - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  hostPath:
+    path: "/drupal-mysql-data"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: drupal-pv
+spec:
+  storageClassName: manual
+  accessModes: 
+    - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  hostPath:
+    path: "/drupal-data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drupal-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drupal-mysql-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drupal-mysql
+spec:
+  selector:
+    matchLabels:
+      app: drupal-mysql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: drupal-mysql
+    spec:
+      containers:
+      - image: mysql:5.7
+        name: mysql
+        ports:
+          - containerPort: 3306
+            protocol: TCP
+
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom: 
+              secretKeyRef:
+                name: drupal-mysql-secret
+                key: MYSQL_ROOT_PASSWORD
+          
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: drupal-mysql-secret
+                key: MYSQL_DATABASE
+
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: drupal-mysql-secret
+                key: MYSQL_USER
+
+        volumeMounts:
+        - name: mysql-pers-storage
+          mountPath: "/var/lib/mysql"
+          subPath: dbdata
+      volumes:
+      - name: mysql-pers-storage
+        persistentVolumeClaim: 
+          claimName: drupal-mysql-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drupal
+  labels:
+    app: drupal
+spec:
+  selector:
+    matchLabels:
+      app: drupal-deploy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: drupal-deploy
+    spec:
+      containers:
+      - name: drupal
+        image: drupal:8.6
+        ports:
+        - containerPort: 80  
+        volumeMounts:
+        - name: drupal-pers-storage
+          mountPath: "/var/www/html/modules"
+          subPath: modules
+        - name: drupal-pers-storage
+          mountPath: "/var/www/html/profiles"
+          subPath: profiles
+        - name: drupal-pers-storage
+          mountPath: "/var/www/html/sites"
+          subPath: sites
+        - name: drupal-pers-storage
+          mountPath: "/var/www/html/themes"
+          subPath: themes                        
+      initContainers:
+        - name: "init-sites-volume"
+          image: drupal:8.6
+          command: [ "/bin/bash", "-c" ]
+          args: [ 'cp -r /var/www/html/sites/ /data/; chown www-data:www-data /data/ -R' ]
+          volumeMounts:
+            - name: "drupal-pers-storage"
+              mountPath: "/data"
+      volumes:
+        - name: drupal-pers-storage
+          persistentVolumeClaim: 
+            claimName: drupal-pvc        

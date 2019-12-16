@@ -1,0 +1,24 @@
+first 
+
+change the certificate key to ca.crt in /etc/k8s/manifest/kube-api***.yml
+
+secoond
+start the dead container by 
+docker ps -a | grep api 
+
+start this container
+docker start ID 
+
+
+
+third
+
+To prevent a node from scheduling new pods use:
+
+kubectl cordon <node-name>
+
+Which will cause the node to be in the status: Ready,SchedulingDisabled.
+
+To tell is to resume scheduling use:
+
+kubectl uncordon <node-name>
